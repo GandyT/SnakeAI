@@ -59,6 +59,7 @@ function gameLoop() {
 SnakeHandles.push(new Snake()); // Debug Snake
 document.body.addEventListener("keydown", (event) => {
     if (SnakeHandles[0]) {
+        event.preventDefault();
         if (event.keyCode == 68 || event.keyCode == 39) {
             SnakeHandles[0].setVelocity([1, 0])
         } else if (event.keyCode == 65 || event.keyCode == 37) {
