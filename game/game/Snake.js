@@ -24,6 +24,16 @@ class Snake {
     }
 
     setVelocity(newVelocity) {
+        /* CHECK IF SNAKE'S HEAD WILL REVERSE INTO IT'S SECOND SEGMENT */
+        if (this.chain.length > 1) {
+            var head = this.chain[0];
+            var neck = this.chain[1];
+
+            if (head.x + newVelocity[0] == neck.x && head.y + newVelocity[1] == neck.y) return false;
+        }
+
+        /* =============================== */
+
         this.velocity = newVelocity;
     }
 
@@ -64,6 +74,20 @@ class Snake {
             // add to back of snake (+1)
             this.chain.push(this.addPos);
         }
+    }
+
+    /* SIMPLER MOVEMENT INTERFACE */
+    left() {
+        this.setVelocity([-1, 0])
+    }
+    right() {
+        this.setVelocity([1, 0])
+    }
+    up() {
+        this.setVelocity([0, -1])
+    }
+    down() {
+        this.setVelocity([0, 1])
     }
 }
 

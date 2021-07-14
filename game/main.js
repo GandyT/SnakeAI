@@ -19,11 +19,12 @@ const GameRender = new Render(ctx, screenWidth, screenHeight);
 var SnakeHandles = [];
 
 function gameLoop() {
+    // clears entire frame with background color to redraw snake frames
     GameRender.clear();
 
     for (let snakeIndex in SnakeHandles) {
         let snake = SnakeHandles[snakeIndex];
-        snake.move();
+        snake.move(); // snake class calculates movement internally
 
         if (snake.dead) {
 
@@ -55,13 +56,13 @@ document.body.addEventListener("keydown", (event) => {
     if (SnakeHandles[0]) {
         event.preventDefault();
         if (event.keyCode == 68 || event.keyCode == 39) {
-            SnakeHandles[0].setVelocity([1, 0])
+            SnakeHandles[0].right()
         } else if (event.keyCode == 65 || event.keyCode == 37) {
-            SnakeHandles[0].setVelocity([-1, 0])
+            SnakeHandles[0].left()
         } else if (event.keyCode == 83 || event.keyCode == 40) {
-            SnakeHandles[0].setVelocity([0, 1])
+            SnakeHandles[0].down()
         } else if (event.keyCode == 87 || event.keyCode == 38) {
-            SnakeHandles[0].setVelocity([0, -1])
+            SnakeHandles[0].up()
         }
     }
 });

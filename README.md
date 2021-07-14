@@ -7,6 +7,8 @@
 
 You can no longer simply use modules on a local html page.
 
-Using the live-server module, you can type "npm run server"
+First, download the dependencies by typing "npm install"
+
+Then, using the live-server module, you can type "npm run server"
 
 to host the html file on local host, thus allowing modules to work
