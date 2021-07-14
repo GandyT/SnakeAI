@@ -1,29 +1,31 @@
+import { Config } from "../misc/gameConfig.js";
+
 class Render {
-    constructor(ctx, width, height, config) {
+    constructor(ctx, width, height) {
         this.ctx = this.ctx = ctx;
         this.width = width;
         this.height = height;
-        this.config = config
     }
 
-    /* 
-        GAME STATE IS A MATRICE OF HEX COLOR VALUES, EACH ONE REPRESENTING A SQUARE
-    */
-    render(GameState) {
+    clear() {
+        /* DRAW BACKGROUND */
+        this.ctx.fillStyle = Config.backgroundColor;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+    }
+
+    render(Snake) {
         this.ctx.beginPath();
-        var blockWidth = Math.floor(this.width / GameState.length)
+        var blockWidth = Math.floor(this.width / Config.length)
 
-        for (let row = 0; row < this.config.length; ++row) {
-            for (let column = 0; column < this.config.length; ++column) {
-                if (!GameState[row][column]) {
-                    this.ctx.fillStyle = this.config.backgroundColor;
-                } else {
-                    this.ctx.fillStyle = GameState[row][column]
-                }
-
-                this.ctx.fillRect(column * blockWidth, row * blockWidth, blockWidth, blockWidth);
-            }
+        /* DRAW SNAKE */
+        this.ctx.fillStyle = Config.snakeColor;
+        for (let segment of Snake.chain) {
+            this.ctx.fillRect(segment.x * blockWidth, segment.y * blockWidth, blockWidth, blockWidth);
         }
+
+        /* DRAW APPLE */
+        this.ctx.fillStyle = Config.appleColor;
+        this.ctx.fillRect(Snake.apple.x * blockWidth, Snake.apple.y * blockWidth, blockWidth, blockWidth);
 
         return true;
     }

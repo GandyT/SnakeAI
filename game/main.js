@@ -1,6 +1,6 @@
 import { Config } from "./misc/gameConfig.js"
 import Logger from "./misc/Logger.js"
-import GameState from "./game/GameState.js";
+import Render from "./game/Render.js";
 import Snake from "./game/Snake.js";
 
 const LOGGER = new Logger("SnakeAI");
@@ -14,12 +14,12 @@ var screenHeight = canvas.height
 
 LOGGER.info(`GameScreen - w: ${screenWidth}, h: ${screenHeight}`);
 
-const GameRef = new GameState(Config, screenWidth, screenHeight);
+const GameRender = new Render(ctx, screenWidth, screenHeight);
 
 var SnakeHandles = [];
 
 function gameLoop() {
-    GameRef.flush();
+    GameRender.clear();
 
     for (let snakeIndex in SnakeHandles) {
         let snake = SnakeHandles[snakeIndex];
@@ -43,16 +43,10 @@ function gameLoop() {
             continue;
         }
 
-        GameRef[snake.apple.y][snake.apple.x] = GameRef.config.appleColor;
-
-        for (let coord of snake.chain) {
-            GameRef[coord.y][coord.x] = GameRef.config.snakeColor;
-        }
+        GameRender.render(snake);
     }
 
-    GameRef.render(ctx);
-
-    setTimeout(() => requestAnimationFrame(gameLoop), 1000 / GameRef.config.fps)
+    setTimeout(() => requestAnimationFrame(gameLoop), 1000 / Config.fps)
 }
 
 /* DEBUG */
