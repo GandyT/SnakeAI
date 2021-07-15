@@ -15,21 +15,30 @@ var screenHeight = canvas.height
 LOGGER.info(`GameScreen - w: ${screenWidth}, h: ${screenHeight}`);
 
 const GameRender = new Render(ctx, screenWidth, screenHeight);
+const popSize = 10;
 
 var SnakeHandles = [];
+
+for (let i = 0; i < popSize; ++i) {
+    SnakeHandles.push(new Snake(i)); // Debug Snakes
+}
 
 function gameLoop() {
     // clears entire frame with background color to redraw snake frames
     GameRender.clear();
 
-    for (let snakeIndex in SnakeHandles) {
+    for (let snakeIndex = 0; snakeIndex < SnakeHandles.length; ++snakeIndex) {
         let snake = SnakeHandles[snakeIndex];
+        if (snake.dead) continue;
+
+        snake.getVision();
+        snake.decide();
         snake.move(); // snake class calculates movement internally
 
         if (snake.dead) {
 
             LOGGER.info(
-                `Snake ${snakeIndex} died.\n` +
+                `Snake ${snake.snakeNum} died.\n` +
                 `Length: ${snake.chain.length}`
             )
 
@@ -38,8 +47,6 @@ function gameLoop() {
             */
 
             /* ================================= */
-            // remove from array
-            SnakeHandles = [...SnakeHandles.slice(0, snakeIndex), ...SnakeHandles.slice(snakeIndex + 1)];
 
             continue;
         }
@@ -50,22 +57,6 @@ function gameLoop() {
     setTimeout(() => requestAnimationFrame(gameLoop), 1000 / Config.fps)
 }
 
-/* DEBUG */
-SnakeHandles.push(new Snake()); // Debug Snake
-document.body.addEventListener("keydown", (event) => {
-    if (SnakeHandles[0]) {
-        event.preventDefault();
-        if (event.keyCode == 68 || event.keyCode == 39) {
-            SnakeHandles[0].right()
-        } else if (event.keyCode == 65 || event.keyCode == 37) {
-            SnakeHandles[0].left()
-        } else if (event.keyCode == 83 || event.keyCode == 40) {
-            SnakeHandles[0].down()
-        } else if (event.keyCode == 87 || event.keyCode == 38) {
-            SnakeHandles[0].up()
-        }
-    }
-});
 /* =============================== */
 
 gameLoop();

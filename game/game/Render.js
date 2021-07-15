@@ -18,13 +18,13 @@ class Render {
         var blockWidth = Math.floor(this.width / Config.length)
 
         /* DRAW SNAKE */
-        this.ctx.fillStyle = Config.snakeColor;
+        this.ctx.fillStyle = Snake.color;
         for (let segment of Snake.chain) {
             this.ctx.fillRect(segment.x * blockWidth, segment.y * blockWidth, blockWidth, blockWidth);
         }
 
         /* DRAW APPLE */
-        this.ctx.fillStyle = Config.appleColor;
+        this.ctx.fillStyle = Snake.color;
         this.ctx.fillRect(Snake.apple.x * blockWidth, Snake.apple.y * blockWidth, blockWidth, blockWidth);
 
         return true;
