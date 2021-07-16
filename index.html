@@ -5,7 +5,18 @@
 </head>
 
 <body>
-    <canvas id="gs" width="880" height="880"></canvas>
+    <div id="lastGenStats"></div>
+    <canvas id="gs" width="660" height="660"></canvas>
+    <div id="viewing">Gen: 0, Viewing: 1, Length: 2</div>
+    <div id="btns">
+        <button id="viewBest" class="btn">View Best</button>
+        <button id="download" class="btn">Download Best</button>
+        <div>
+            <label>Load Model</label>
+            <input id="chooseFile" class="chooseFile" type="file" accept=".json"></input>
+            <button id="loadBtn">Load</button>
+        </div>
+    </div>
     <script type="module" src="game/main.js"></script>
     <noscript>Javascript is required to run this simulation</noscript>
 </body>

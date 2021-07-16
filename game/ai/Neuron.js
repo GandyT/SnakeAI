@@ -9,13 +9,8 @@ class Neuron {
         this.bias = Math.random() * 2 - 1;
         this.id = uuid();
         this.incoming = {
-            neurons: {},
-            weights: {}
-        }
-
-        this.outgoing = {
-            neurons: {},
-            weights: {}
+            neurons: [],
+            weights: []
         }
 
         this.output;
@@ -33,10 +28,12 @@ class Neuron {
     /* ========= */
 
     connect(neuron) {
-        this.outgoing.neurons[neuron.id] = neuron;
-        this.outgoing.weights[neuron.id] = Math.random() * 2 - 1;
-        neuron.incoming.neurons[this.id] = this;
-        neuron.incoming.weights[this.id] = Math.random() * 2 - 1;
+        neuron.incoming.neurons.push(this);
+        neuron.incoming.weights.push(Math.random() * 2 - 1);
+    }
+
+    clearConnections() {
+        this.incoming.neurons = [];
     }
 
     activate(input) {
@@ -48,10 +45,9 @@ class Neuron {
 
             var sum = this.bias;
 
-            for (let [key, value] of Object.entries(this.incoming.neurons)) {
-                sum += value.output * this.incoming.weights[key];
+            for (let iter in this.incoming.neurons) {
+                sum += this.incoming.neurons[iter].output * this.incoming.weights[iter];
             }
-
 
             this.output = this.sigmoid(sum);
         }
@@ -61,9 +57,18 @@ class Neuron {
         for (let key of Object.keys(this.incoming.weights)) {
             let random = Math.random();
 
-            if (random < mutationRate) {
-                this.incoming.weights[key] = Math.random() * 2 - 1;
+            if (random < mutationRate) { // limit between -1, 1
+                this.incoming.weights[key] += (Math.random() * 2 - 1) * 0.2;
+                this.incoming.weights[key] = Math.min(1, Math.max(-1, this.incoming.weights[key]))
             }
+        }
+
+        let biasRandom = Math.random();
+
+        if (biasRandom < mutationRate) { // limit between -1, 1
+            this.bias += (Math.random() * 2 - 1) * 0.2;
+
+            this.bias = Math.min(1, Math.max(-1, this.bias));
         }
     }
 }

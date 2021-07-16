@@ -4,5 +4,8 @@
   },
   "scripts": {
     "server": "live-server"
+  },
+  "dependencies": {
+    "file-saver": "^2.0.5"
   }
 }

@@ -13,7 +13,7 @@ class Render {
         this.ctx.fillRect(0, 0, this.width, this.height);
     }
 
-    render(Snake) {
+    render(Snake, viewBest) {
         this.ctx.beginPath();
         var blockWidth = Math.floor(this.width / Config.length)
 
@@ -24,8 +24,48 @@ class Render {
         }
 
         /* DRAW APPLE */
-        this.ctx.fillStyle = Snake.color;
         this.ctx.fillRect(Snake.apple.x * blockWidth, Snake.apple.y * blockWidth, blockWidth, blockWidth);
+
+        /* RENDER VISION */
+        let directions = [
+            [-1, 0],
+            [-1, -1],
+            [0, -1],
+            [1, -1],
+            [1, 0],
+            [1, 1],
+            [0, 1],
+            [-1, 1]
+        ];
+
+        // render vision
+
+        if (viewBest) {
+
+
+            for (let direction of directions) {
+                let position = JSON.parse(JSON.stringify(Snake.chain[0]));
+
+                while (
+                    (position.x < Config.length && position.y < Config.length) &&
+                    (position.x >= 0 && position.y >= 0)
+                ) {
+                    this.ctx.strokeStyle = Config.snakeColor;
+
+                    position.x += direction[0];
+                    position.y += direction[1];
+
+                    if (position.x == Snake.apple.x && position.y == Snake.apple.y) {
+                        this.ctx.strokeStyle = Config.appleColor;
+                        this.ctx.strokeRect(position.x * blockWidth, position.y * blockWidth, blockWidth, blockWidth);
+                        break;
+                    }
+
+                    this.ctx.strokeRect(position.x * blockWidth, position.y * blockWidth, blockWidth, blockWidth);
+                }
+            }
+        }
+
 
         return true;
     }

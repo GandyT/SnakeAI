@@ -23,10 +23,11 @@ class Snake {
         this.dead = false;
         this.addPos = {};
         this.vision = []; // single column matrix
-        this.visionRadius = 3;
-        this.neuralNet = new NeuralNet((this.visionRadius * 2) ** 2, 16, this.velocity.length ** 2);
+        this.neuralNet = new NeuralNet(24, 16, 4);
         this.neuralNet.dense();
-        this.moves = 200; // prevent infinite snakes
+        this.maxMoves = 200;
+        this.moves = this.maxMoves; // prevent infinite snakes
+
 
         this.maxLength = Config.length ** 2; // snake can take up the entire board
         this.fitness = 0;
@@ -97,33 +98,50 @@ class Snake {
     }
 
     getVision() {
-        var vision = [];
-
-        for (let row = -this.visionRadius; row < this.visionRadius; ++row) {
-            for (let column = -this.visionRadius; column < this.visionRadius; ++column) {
-                let visionX = this.chain[0].x + row;
-                let visionY = this.chain[0].y + column;
-                if ( // within bounds
-                    (visionX > 0 && visionY > 0) &&
-                    (visionX < Config.length && visionY < Config.length)
-                ) {
-                    if (this.chain.find(seg => seg.x == visionX && seg.y == visionY)) {
-                        // itself
-                        vision.push(-1);
-                    } else if (this.apple.x == visionX && this.apple.y == visionY) {
-                        // apple
-                        vision.push(1);
-                    } else {
-                        // empty space
-                        vision.push(0);
-                    }
-                } else {
-                    vision.push(-1);
-                }
-            }
-        }
+        /* ALL 8 DIRECTIONS */
+        var vision = [
+            ...this.getDirection(-1, 0),
+            ...this.getDirection(-1, -1),
+            ...this.getDirection(0, -1),
+            ...this.getDirection(1, -1),
+            ...this.getDirection(1, 0),
+            ...this.getDirection(1, 1),
+            ...this.getDirection(0, 1),
+            ...this.getDirection(-1, 1)
+        ];
 
         this.vision = vision;
+    }
+
+    getDirection(rise, run) {
+        // rise = x increment, run = y increment
+        let temp = new Array(3);
+        // food, tail, wall
+
+        let position = JSON.parse(JSON.stringify(this.chain[0]));
+        position.x += rise;
+        position.y += run;
+        let distance = 1;
+
+        while (
+            (position.x < Config.length && position.y < Config.length) &&
+            (position.x >= 0 && position.y >= 0)
+        ) {
+            if (position.x == this.apple.x && position.y == this.apple.y) {
+                temp[0] = 100;
+            }
+            if (this.chain.find(seg => seg.x == position.x && seg.y == position.y)) {
+                temp[1] = Math.abs(position.x - this.chain[0].x);
+            }
+
+            position.x += rise;
+            position.y += run;
+            distance++;
+        }
+
+        temp[2] = distance;
+
+        return temp;
     }
 
     /* SIMPLER MOVEMENT INTERFACE */
@@ -184,7 +202,26 @@ class Snake {
     }
 
     calcFitness() {
-        this.fitness = (this.chain.length / this.maxLength) ** 2; // squared error to give more weight to better fitness
+        this.fitness = (this.maxMoves - this.moves) ** 2 * Math.pow(2, this.chain.length) // squared error to give more weight to better fitness
+    }
+
+    revive() {
+        this.dead = false;
+        this.moves = this.maxMoves;
+        this.generateApple();
+        this.chain = [
+            {
+                x: Math.floor(Math.random() * Config.length),
+                y: Math.floor(Math.random() * Config.length)
+            }
+        ];
+    }
+
+    copy() {
+        let clone = new Snake(69);
+        clone.neuralNet = this.neuralNet;
+        clone.color = this.color;
+        return clone;
     }
 }
 
