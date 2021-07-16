@@ -21,8 +21,8 @@ var screenHeight = canvas.height
 LOGGER.info(`GameScreen - w: ${screenWidth}, h: ${screenHeight}`);
 
 const GameRender = new Render(ctx, screenWidth, screenHeight);
-const popSize = 2000;
-const mutationRate = 0.01;
+const popSize = 3;
+const mutationRate = 1;
 
 var singleSnake = false;
 
@@ -34,6 +34,7 @@ function gameLoop() {
 
     for (let snakeIndex = 0; snakeIndex < SnakeHandles.sample.length; ++snakeIndex) {
         let snake = SnakeHandles.sample[snakeIndex];
+
         if (snake.dead) continue;
 
         snake.getVision();
@@ -57,17 +58,17 @@ function gameLoop() {
 
 
     if (SnakeHandles.isDone) {
-        if (SnakeHandles.sample.length > 1) {
-            // new generation
-            SnakeHandles.calcFitness();
-            var bestSnake = SnakeHandles.bestSnake;
-            var stats = `[GEN${SnakeHandles.generation}] AVG FIT: ${SnakeHandles.avgFit}, BEST: ${bestSnake.chain.length} (ALIVE: ${bestSnake.maxMoves - bestSnake.moves})`
-            console.log(stats)
-            lastGenStats.innerHTML = stats;
-            SnakeHandles.selection();
-        } else if (SnakeHandles.sample.length == 1) {
-            SnakeHandles.sample[0].dead = false;
-        }
+        // new generation
+        SnakeHandles.calcFitness();
+
+        var bestSnake = SnakeHandles.bestSnake;
+        var stats = `[GEN${SnakeHandles.generation}] AVG FIT: ${SnakeHandles.avgFit}, BEST: ${bestSnake ? bestSnake.chain.length : "NONE"} (ALIVE: ${bestSnake ? bestSnake.maxMoves - bestSnake.moves : "NONE"})`
+        console.log(stats)
+
+        lastGenStats.innerHTML = stats;
+        SnakeHandles.selection();
+
+        if (SnakeHandles.sample.length == 1) SnakeHandles.sample[0].neuralNet.mutate(mutationRate);
     }
 
     setTimeout(() => requestAnimationFrame(gameLoop), 1000 / Config.fps)
@@ -86,7 +87,7 @@ viewBestBtn.addEventListener("click", event => {
 });
 
 downloadBtn.addEventListener("click", event => {
-    let NetJSON = SnakeHandles.lastBest.neuralNet.toJson();
+    let NetJSON = SnakeHandles.greatestSnake.neuralNet.toJson();
     var blob = new Blob([NetJSON], { type: "text/plain;charset=utf-8" });
     saveAs(blob, "model.json");
 });

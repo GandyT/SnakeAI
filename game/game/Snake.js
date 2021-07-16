@@ -8,10 +8,26 @@ const randomHex = () => {
 
 class Snake {
     constructor(snakeNum) {
+        /* SNAKE IS IN THE SAME POSITION EVERY TIME IT STARTS*/
+        let initX = Math.floor(Config.length / 2);
+        let initY = initX;
+
         this.chain = [
             {
-                x: Math.floor(Math.random() * Config.length),
-                y: Math.floor(Math.random() * Config.length)
+                x: initX,
+                y: initY
+            },
+            {
+                x: initX - 1,
+                y: initY,
+            },
+            {
+                x: initX - 2,
+                y: initY
+            },
+            {
+                x: initX - 3,
+                y: initY
             }
         ];
 
@@ -25,7 +41,7 @@ class Snake {
         this.vision = []; // single column matrix
         this.neuralNet = new NeuralNet(24, 16, 4);
         this.neuralNet.dense();
-        this.maxMoves = 200;
+        this.maxMoves = 250;
         this.moves = this.maxMoves; // prevent infinite snakes
 
 
@@ -40,20 +56,17 @@ class Snake {
         } while (this.chain.find(coord => coord.x == this.apple.x && coord.y == this.apple.y))
     }
 
+    grow() {
+        this.chain.unshift({
+            x: this.chain[0].x + this.velocity[0],
+            y: this.chain[0].y + this.velocity[1]
+        });
+        this.addPos = this.chain.pop(); // save last position of last piece of snake so when snake eats something it puts new piece there
+    }
+
     setVelocity(newVelocity) {
         /* CHECK IF SNAKE'S HEAD WILL REVERSE INTO IT'S SECOND SEGMENT */
-        if (this.chain.length > 1) {
-            var head = this.chain[0];
-            var neck = this.chain[1];
-
-            if (head.x + newVelocity[0] == neck.x && head.y + newVelocity[1] == neck.y) return false;
-
-            /* =============================== */
-
-            this.velocity = newVelocity;
-        } else {
-            this.velocity = newVelocity;
-        }
+        this.velocity = newVelocity;
     }
 
     move() {
@@ -77,11 +90,8 @@ class Snake {
             return;
         }
 
-        this.chain.unshift({
-            x: this.chain[0].x + this.velocity[0],
-            y: this.chain[0].y + this.velocity[1]
-        });
-        this.addPos = this.chain.pop(); // save last position of last piece of snake so when snake eats something it puts new piece there
+        this.grow();
+
         this.moves--;
 
         /* APPLE COLLISION DETECTION */
@@ -123,15 +133,23 @@ class Snake {
         position.y += run;
         let distance = 1;
 
+        temp[0] = 0;
+        temp[1] = 0;
+
+        let bodyFound = false;
+        let appleFound = false;
+
         while (
             (position.x < Config.length && position.y < Config.length) &&
             (position.x >= 0 && position.y >= 0)
         ) {
-            if (position.x == this.apple.x && position.y == this.apple.y) {
-                temp[0] = 100;
+            if (!appleFound && position.x == this.apple.x && position.y == this.apple.y) {
+                temp[0] = 1;
+                appleFound = true;
             }
-            if (this.chain.find(seg => seg.x == position.x && seg.y == position.y)) {
-                temp[1] = Math.abs(position.x - this.chain[0].x);
+            if (!bodyFound && this.chain.find(seg => (seg.x == position.x && seg.y == position.y) && seg.x != this.chain[0].x && seg.y != this.chain[0].y)) {
+                temp[1] = 1;
+                bodyFound = true;
             }
 
             position.x += rise;
@@ -139,7 +157,7 @@ class Snake {
             distance++;
         }
 
-        temp[2] = distance;
+        temp[2] = 1 / distance;
 
         return temp;
     }
@@ -160,28 +178,13 @@ class Snake {
     decide() {
         var output = this.neuralNet.activate(this.vision);
 
-        var totalDecision = 0;
-
-        for (let i = 0; i < output.length; ++i) {
-            output[i] = output[i] ** 2; // more weight on the better moves
-            totalDecision += output[i];
-        }
-
-        for (let i = 0; i < output.length; ++i) {
-            // weight all the decisions so all of them added is less than 1
-            output[i] = output[i] / totalDecision;
-        }
-
-        var random = Math.random();
-        var total = 0;
         var index = 0;
+        var max = -1;
 
-        for (let i = 0; i < output.length; ++i) {
-            total += output[i];
-
-            if (random < total) {
-                index = i;
-                break;
+        for (let i in output) {
+            if (output[i] > max) {
+                max = output[i];
+                index = Number(i);
             }
         }
 
@@ -202,17 +205,32 @@ class Snake {
     }
 
     calcFitness() {
-        this.fitness = (this.maxMoves - this.moves) ** 2 * Math.pow(2, this.chain.length) // squared error to give more weight to better fitness
+        this.fitness = (this.maxMoves - this.moves) ** 2 * Math.pow(2, this.chain.length - 3);
     }
 
     revive() {
         this.dead = false;
         this.moves = this.maxMoves;
         this.generateApple();
+        let initX = Math.floor(Config.length / 2);
+        let initY = initX;
+
         this.chain = [
             {
-                x: Math.floor(Math.random() * Config.length),
-                y: Math.floor(Math.random() * Config.length)
+                x: initX,
+                y: initY
+            },
+            {
+                x: initX - 1,
+                y: initY,
+            },
+            {
+                x: initX - 2,
+                y: initY
+            },
+            {
+                x: initX - 3,
+                y: initY
             }
         ];
     }
@@ -221,6 +239,7 @@ class Snake {
         let clone = new Snake(69);
         clone.neuralNet = this.neuralNet;
         clone.color = this.color;
+        clone.fitness = this.fitness;
         return clone;
     }
 }

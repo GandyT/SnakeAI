@@ -11,15 +11,9 @@ class NeuralNet {
         }
         for (let i = 0; i < hiddenNodes; ++i) {
             this.hiddenNodes.push(new Neuron());
-            for (let k = 0; k < outputNodes; ++k) {
-                this.hiddenNodes[i].connect(this.outputNodes[k]);
-            }
         }
         for (let i = 0; i < inputNodes; ++i) {
             this.inputNodes.push(new Neuron());
-            for (let k = 0; k < hiddenNodes; ++k) {
-                this.inputNodes[i].connect(this.hiddenNodes[k]);
-            }
         }
     }
 
@@ -55,13 +49,14 @@ class NeuralNet {
     dense() {
         /* CONNECT ALL NODES */
 
-        for (let i = 0; i < this.hiddenNodes.length; ++i) {
+        for (let i = 0; i < this.hiddenNodes.length / this.hiddenLayers; ++i) {
             for (let k = 0; k < this.outputNodes.length; ++k) {
                 this.hiddenNodes[i].connect(this.outputNodes[k]);
             }
         }
+
         for (let i = 0; i < this.inputNodes.length; ++i) {
-            for (let k = 0; k < this.hiddenNodes.length; ++k) {
+            for (let k = 0; k < this.hiddenNodes.length / this.hiddenLayers; ++k) {
                 this.inputNodes[i].connect(this.hiddenNodes[k]);
             }
         }
@@ -75,12 +70,6 @@ class NeuralNet {
                 this.outputNodes[i].incoming.neurons.push(this.hiddenNodes[k]);
             }
         }
-        for (let i = 0; i < this.hiddenNodes.length; ++i) {
-            this.hiddenNodes[i].clearConnections();
-            for (let k = 0; k < this.inputNodes.length; ++k) {
-                this.hiddenNodes[i].incoming.neurons.push(this.inputNodes[k]);
-            }
-        }
     }
 
     crossOver(MateNet) {
@@ -92,13 +81,25 @@ class NeuralNet {
 
         var child = new NeuralNet(this.inputNodes.length, this.hiddenNodes.length, this.outputNodes.length);
 
-        var randomHiddenPoint = Math.floor(Math.random() * this.hiddenNodes.length);
-        var randomOutputPoint = Math.floor(Math.random() * this.outputNodes);
+        var randomInputPoint = Math.floor(this.inputNodes.length * 0.5)
+        var randomHiddenPoint = Math.floor(this.hiddenNodes.length * 0.5);
+        var randomOutputPoint = Math.floor(this.outputNodes.length * 0.5);
 
         /* READJUST WEIGHTS */
-        child.hiddenNodes = [...this.hiddenNodes.slice(0, randomHiddenPoint), ...MateNet.hiddenNodes.slice(randomHiddenPoint)]
-        child.outputNodes = [...this.outputNodes.slice(0, randomOutputPoint), ...MateNet.outputNodes.slice(randomOutputPoint)];
-        child.reconnect();
+        let momFirst = Math.random();
+
+        if (momFirst < 0.5) {
+            child.inputNodes = [...this.inputNodes.slice(0, randomInputPoint), ...MateNet.inputNodes.slice(randomInputPoint)];
+            child.hiddenNodes = [...this.hiddenNodes.slice(0, randomHiddenPoint), ...MateNet.hiddenNodes.slice(randomHiddenPoint)]
+            child.outputNodes = [...this.outputNodes.slice(0, randomOutputPoint), ...MateNet.outputNodes.slice(randomOutputPoint)];
+        } else {
+            // dad first
+            child.inputNodes = [...MateNet.inputNodes.slice(0, randomInputPoint), ...this.inputNodes.slice(randomInputPoint)];
+            child.hiddenNodes = [...MateNet.hiddenNodes.slice(0, randomHiddenPoint), ...this.hiddenNodes.slice(randomHiddenPoint)]
+            child.outputNodes = [...MateNet.outputNodes.slice(0, randomOutputPoint), ...this.outputNodes.slice(randomOutputPoint)];
+        }
+
+        child.dense();
 
         return child;
     }
@@ -144,7 +145,8 @@ class NeuralNet {
         model.hiddenNeurons.forEach((neuron, i) => {
             this.hiddenNodes[i].bias = neuron.bias;
             this.hiddenNodes[i].incoming.weights = neuron.weights;
-        })
+        });
+        this.reconnect();
     }
 }
 

@@ -21,14 +21,13 @@ class Neuron {
     sigmoid(x) {
         return 1 / (1 + Math.exp(-x))
     }
-    sigmoidDer(x) {
-        return this.sigmoid(x) * (1 - this.sigmoid(x));
-    }
 
     /* ========= */
 
     connect(neuron) {
         neuron.incoming.neurons.push(this);
+
+        if (neuron.incoming.weights.length >= neuron.incoming.neurons.length) return;
         neuron.incoming.weights.push(Math.random() * 2 - 1);
     }
 
@@ -38,7 +37,7 @@ class Neuron {
 
     activate(input) {
         /* STARTING NEURON */
-        if (input) {
+        if (input !== undefined) {
             this.output = input;
         } else {
             // Hidden / Output Neurons
@@ -58,17 +57,28 @@ class Neuron {
             let random = Math.random();
 
             if (random < mutationRate) { // limit between -1, 1
-                this.incoming.weights[key] += (Math.random() * 2 - 1) * 0.2;
-                this.incoming.weights[key] = Math.min(1, Math.max(-1, this.incoming.weights[key]))
+                let bigRandom = Math.random();
+
+                if (bigRandom < 1) {
+                    this.incoming.weights[key] = Math.random() * 2 - 1;
+                } else {
+                    this.incoming.weights[key] += (Math.random() * 2 - 1) * 0.2;
+                    this.incoming.weights[key] = Math.max(-1, Math.min(1, this.incoming.weights[key]));
+                }
             }
         }
 
         let biasRandom = Math.random();
 
         if (biasRandom < mutationRate) { // limit between -1, 1
-            this.bias += (Math.random() * 2 - 1) * 0.2;
+            let bigBias = Math.random();
 
-            this.bias = Math.min(1, Math.max(-1, this.bias));
+            if (bigBias < 1) {
+                this.bias = Math.random() * 2 - 1;
+            } else {
+                this.bias += Math.random() * 2 - 1;
+                this.bias = Math.max(-1, Math.min(1, this.bias));
+            }
         }
     }
 }

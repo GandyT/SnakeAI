@@ -6,6 +6,7 @@ class Population {
         this.mutationRate = mutationRate;
         this.generation = 0;
         this.lastBest = undefined;
+        this.greatestSnake = undefined;
 
         for (let i = 0; i < size; ++i) {
             this.sample.push(new Snake(i));
@@ -14,9 +15,16 @@ class Population {
 
     selection() {
         var totalFitness = 0;
+        let maxFitness = -1;
+        let maxSnake = undefined;
 
         for (let snake of this.sample) {
             totalFitness += snake.fitness;
+
+            if (snake.fitness > maxFitness) {
+                maxFitness = snake.fitness;
+                maxSnake = snake;
+            }
         }
 
         var weights = [];
@@ -26,26 +34,13 @@ class Population {
             weights.push(snake.fitness / totalFitness);
         }
 
-
         // choose random 2 snakes
-
+        // save best snake
         var newSample = [];
-
-        /* SAVE THE TOP 25% */
-        var slicePoint = Math.floor(this.sample.length / 4);
-        var sorted = this.sample.sort((sn1, sn2) => {
-            return sn2.fitness - sn1.fitness
-        });
-        newSample = sorted.slice(0, slicePoint);
-
-        for (let newSnake of newSample) {
-            newSnake.revive();
-            newSnake.best = false;
-        }
-
+        newSample[0] = maxSnake.copy();
         newSample[0].best = true;
 
-        this.lastBest = this.bestSnake.copy();
+        this.lastBest = maxSnake.copy();
 
         const chooseRandom = () => {
             var total = 0;
@@ -65,12 +60,13 @@ class Population {
         }
 
         /* NEXT GENERATION */
-        for (let i = slicePoint; i < this.sample.length; ++i) {
+        for (let i = 1; i < this.sample.length; ++i) {
             let momSnake = this.sample[chooseRandom()];
             let dadSnake = this.sample[chooseRandom()];
 
             let childSnake = new Snake(i);
             childSnake.neuralNet = momSnake.neuralNet.crossOver(dadSnake.neuralNet);
+            childSnake.neuralNet.mutate(this.mutationRate);
 
             newSample.push(childSnake);
         }
@@ -80,7 +76,17 @@ class Population {
     }
 
     calcFitness() {
-        for (let snake of this.sample) snake.calcFitness();
+        for (let snake of this.sample) {
+            snake.calcFitness();
+
+            if (!this.greatestSnake) {
+                this.greatestSnake = snake;
+            } else {
+                if (snake.fitness > this.greatestSnake.fitness) {
+                    this.greatestSnake = snake;
+                }
+            }
+        }
     }
 
     get isDone() {
@@ -97,7 +103,7 @@ class Population {
     }
 
     get bestSnake() {
-        let bestFitness = 0;
+        let bestFitness = -1;
         let bestSnake = undefined;
 
         for (let snake of this.sample) {
