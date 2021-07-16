@@ -21,8 +21,8 @@ var screenHeight = canvas.height
 LOGGER.info(`GameScreen - w: ${screenWidth}, h: ${screenHeight}`);
 
 const GameRender = new Render(ctx, screenWidth, screenHeight);
-const popSize = 3;
-const mutationRate = 1;
+const popSize = 1500;
+const mutationRate = 0.1;
 
 var singleSnake = false;
 
@@ -59,16 +59,20 @@ function gameLoop() {
 
     if (SnakeHandles.isDone) {
         // new generation
-        SnakeHandles.calcFitness();
+        if (SnakeHandles.sample.length > 1) {
+            SnakeHandles.calcFitness();
 
-        var bestSnake = SnakeHandles.bestSnake;
-        var stats = `[GEN${SnakeHandles.generation}] AVG FIT: ${SnakeHandles.avgFit}, BEST: ${bestSnake ? bestSnake.chain.length : "NONE"} (ALIVE: ${bestSnake ? bestSnake.maxMoves - bestSnake.moves : "NONE"})`
-        console.log(stats)
+            var bestSnake = SnakeHandles.bestSnake;
+            var stats = `[GEN${SnakeHandles.generation}] AVG FIT: ${SnakeHandles.avgFit}, BEST: ${bestSnake ? bestSnake.chain.length : "NONE"} (ALIVE: ${bestSnake ? bestSnake.maxMoves - bestSnake.moves : "NONE"})`
+            console.log(stats)
 
-        lastGenStats.innerHTML = stats;
-        SnakeHandles.selection();
+            lastGenStats.innerHTML = stats;
+            SnakeHandles.selection();
 
-        if (SnakeHandles.sample.length == 1) SnakeHandles.sample[0].neuralNet.mutate(mutationRate);
+            if (SnakeHandles.sample.length == 1) SnakeHandles.sample[0].neuralNet.mutate(mutationRate);
+        } else {
+            SnakeHandles.sample[0].revive();
+        }
     }
 
     setTimeout(() => requestAnimationFrame(gameLoop), 1000 / Config.fps)

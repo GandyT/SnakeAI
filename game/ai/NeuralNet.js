@@ -1,152 +1,112 @@
-import Neuron from "./Neuron.js";
+import Matrix from "./Matrix.js"
 
 class NeuralNet {
-    constructor(inputNodes, hiddenNodes, outputNodes) {
-        this.inputNodes = [];
-        this.hiddenNodes = [];
-        this.outputNodes = [];
+    constructor(inputs, hiddenNo, outputNo) {
 
-        for (let i = 0; i < outputNodes; ++i) {
-            this.outputNodes.push(new Neuron());
-        }
-        for (let i = 0; i < hiddenNodes; ++i) {
-            this.hiddenNodes.push(new Neuron());
-        }
-        for (let i = 0; i < inputNodes; ++i) {
-            this.inputNodes.push(new Neuron());
-        }
+        //set dimensions from parameters
+        this.iNodes = inputs;
+        this.oNodes = outputNo;
+        this.hNodes = hiddenNo;
+
+
+        //create first layer weights 
+        //included bias weight
+        this.whi = new Matrix(this.hNodes, this.iNodes + 1);
+
+        //create second layer weights
+        //include bias weight
+        this.whh = new Matrix(this.hNodes, this.hNodes + 1);
+
+        //create second layer weights
+        //include bias weight
+        this.woh = new Matrix(this.oNodes, this.hNodes + 1);
+
+        //set the matricies to random values
+        this.whi.randomize();
+        this.whh.randomize();
+        this.woh.randomize();
+    }
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------  
+
+    //mutation function for genetic algorithm
+    mutate(mr) {
+        //mutates each weight matrix
+        this.whi.mutate(mr);
+        this.whh.mutate(mr);
+        this.woh.mutate(mr);
     }
 
-    activate(input) {
-        for (let node in this.inputNodes) {
-            // figure out how to input snake vision data
-            this.inputNodes[node].activate(input[node]);
-        }
-        for (let node of this.hiddenNodes) {
-            node.activate();
-        }
-        let values = [];
-        for (let node of this.outputNodes) {
-            node.activate();
-            values.push(node.output);
-        }
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------  
+    //calculate the output values by feeding forward through the neural network
+    output(inputsArr) {
 
-        return values;
+        //convert array to matrix
+        //Note woh has nothing to do with it its just a function in the Matrix class
+        let inputs = this.woh.singleColumnMatrixFromArray(inputsArr);
+
+        //add bias 
+        let inputsBias = inputs.addBias();
+
+
+        //-----------------------calculate the guessed output
+
+        //apply layer one weights to the inputs
+        let hiddenInputs = this.whi.dot(inputsBias);
+
+        //pass through activation function(sigmoid)
+        let hiddenOutputs = hiddenInputs.activate();
+
+        //add bias
+        let hiddenOutputsBias = hiddenOutputs.addBias();
+
+        //apply layer two weights
+        let hiddenInputs2 = this.whh.dot(hiddenOutputsBias);
+        let hiddenOutputs2 = hiddenInputs2.activate();
+        let hiddenOutputsBias2 = hiddenOutputs2.addBias();
+
+        //apply level three weights
+        let outputInputs = this.woh.dot(hiddenOutputsBias2);
+        //pass through activation function(sigmoid)
+        let outputs = outputInputs.activate();
+        //convert to an array and return
+        return outputs.toArray();
     }
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------  
+    //crossover function for genetic algorithm
+    crossover(partner) {
 
-    mutate(mutationRate) {
-        for (let node of this.inputNodes) {
-            node.mutate(mutationRate);
-        }
-        for (let node of this.hiddenNodes) {
-            node.mutate(mutationRate);
-        }
-        for (let node of this.outputNodes) {
-            node.mutate(mutationRate);
-        }
-    }
-
-    dense() {
-        /* CONNECT ALL NODES */
-
-        for (let i = 0; i < this.hiddenNodes.length / this.hiddenLayers; ++i) {
-            for (let k = 0; k < this.outputNodes.length; ++k) {
-                this.hiddenNodes[i].connect(this.outputNodes[k]);
-            }
-        }
-
-        for (let i = 0; i < this.inputNodes.length; ++i) {
-            for (let k = 0; k < this.hiddenNodes.length / this.hiddenLayers; ++k) {
-                this.inputNodes[i].connect(this.hiddenNodes[k]);
-            }
-        }
-
-    }
-
-    reconnect() {
-        for (let i = 0; i < this.outputNodes.length; ++i) {
-            this.outputNodes[i].clearConnections();
-            for (let k = 0; k < this.hiddenNodes.length; ++k) {
-                this.outputNodes[i].incoming.neurons.push(this.hiddenNodes[k]);
-            }
-        }
-    }
-
-    crossOver(MateNet) {
-        // MateNet is another neural network
-        /* 
-        this essentially just takes half of mom dna half of dad dna
-        but this could probably be improved "probably"
-        */
-
-        var child = new NeuralNet(this.inputNodes.length, this.hiddenNodes.length, this.outputNodes.length);
-
-        var randomInputPoint = Math.floor(this.inputNodes.length * 0.5)
-        var randomHiddenPoint = Math.floor(this.hiddenNodes.length * 0.5);
-        var randomOutputPoint = Math.floor(this.outputNodes.length * 0.5);
-
-        /* READJUST WEIGHTS */
-        let momFirst = Math.random();
-
-        if (momFirst < 0.5) {
-            child.inputNodes = [...this.inputNodes.slice(0, randomInputPoint), ...MateNet.inputNodes.slice(randomInputPoint)];
-            child.hiddenNodes = [...this.hiddenNodes.slice(0, randomHiddenPoint), ...MateNet.hiddenNodes.slice(randomHiddenPoint)]
-            child.outputNodes = [...this.outputNodes.slice(0, randomOutputPoint), ...MateNet.outputNodes.slice(randomOutputPoint)];
-        } else {
-            // dad first
-            child.inputNodes = [...MateNet.inputNodes.slice(0, randomInputPoint), ...this.inputNodes.slice(randomInputPoint)];
-            child.hiddenNodes = [...MateNet.hiddenNodes.slice(0, randomHiddenPoint), ...this.hiddenNodes.slice(randomHiddenPoint)]
-            child.outputNodes = [...MateNet.outputNodes.slice(0, randomOutputPoint), ...this.outputNodes.slice(randomOutputPoint)];
-        }
-
-        child.dense();
-
+        //creates a new child with layer matrices from both parents
+        let child = new NeuralNet(this.iNodes, this.hNodes, this.oNodes);
+        child.whi = this.whi.crossover(partner.whi);
+        child.whh = this.whh.crossover(partner.whh);
+        child.woh = this.woh.crossover(partner.woh);
         return child;
+    }
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------  
+    //return a neural net which is a clone of this Neural net
+    clone() {
+        let clone = new NeuralNet(this.iNodes, this.hNodes, this.oNodes);
+        clone.whi = this.whi.clone();
+        clone.whh = this.whh.clone();
+        clone.woh = this.woh.clone();
+
+        return clone;
     }
 
     toJson() {
         let netObj = {
-            inputNeurons: [],
-            hiddenNeurons: [],
-            outputNeurons: []
+            whi: this.whi.toArray(),
+            whh: this.whh.toArray(),
+            woh: this.woh.toArray()
         }
-
-        this.inputNodes.forEach(neuron => {
-            netObj.inputNeurons.push({
-                bias: neuron.bias,
-                weights: neuron.incoming.weights
-            })
-        })
-        this.hiddenNodes.forEach(neuron => {
-            netObj.hiddenNeurons.push({
-                bias: neuron.bias,
-                weights: neuron.incoming.weights
-            })
-        })
-        this.outputNodes.forEach(neuron => {
-            netObj.outputNeurons.push({
-                bias: neuron.bias,
-                weights: neuron.incoming.weights
-            })
-        })
 
         return JSON.stringify(netObj);
     }
 
-    loadModel(model) {
-        model.inputNeurons.forEach((neuron, i) => {
-            this.inputNodes[i].bias = neuron.bias;
-            this.inputNodes[i].incoming.weights = neuron.weights;
-        })
-        model.outputNeurons.forEach((neuron, i) => {
-            this.outputNodes[i].bias = neuron.bias;
-            this.outputNodes[i].incoming.weights = neuron.weights;
-        })
-        model.hiddenNeurons.forEach((neuron, i) => {
-            this.hiddenNodes[i].bias = neuron.bias;
-            this.hiddenNodes[i].incoming.weights = neuron.weights;
-        });
-        this.reconnect();
+    loadModel(netObj) {
+        this.whi.fromArray(netObj.whi);
+        this.whh.fromArray(netObj.whh);
+        this.woh.fromArray(netObj.woh);
     }
 }
 

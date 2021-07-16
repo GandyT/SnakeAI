@@ -14,58 +14,22 @@ class Population {
     }
 
     selection() {
-        var totalFitness = 0;
-        let maxFitness = -1;
-        let maxSnake = undefined;
-
-        for (let snake of this.sample) {
-            totalFitness += snake.fitness;
-
-            if (snake.fitness > maxFitness) {
-                maxFitness = snake.fitness;
-                maxSnake = snake;
-            }
-        }
-
-        var weights = [];
-
-        for (let snake of this.sample) {
-            // weighted fitness
-            weights.push(snake.fitness / totalFitness);
-        }
-
         // choose random 2 snakes
-        // save best snake
+        // save best snake and best snake of generation
         var newSample = [];
-        newSample[0] = maxSnake.copy();
+        newSample[0] = this.greatestSnake.copy();
         newSample[0].best = true;
-
-        this.lastBest = maxSnake.copy();
-
-        const chooseRandom = () => {
-            var total = 0;
-            var random = Math.random();
-            var chosen = 0;
-
-            for (let fitnessIndex in weights) {
-                total += weights[fitnessIndex];
-
-                if (random < total) {
-                    chosen = fitnessIndex;
-                    break;
-                }
-            }
-
-            return chosen;
-        }
+        this.lastBest = this.bestSnake;
+        newSample[1] = this.lastBest.copy();
+        newSample[1].best = true;
 
         /* NEXT GENERATION */
-        for (let i = 1; i < this.sample.length; ++i) {
-            let momSnake = this.sample[chooseRandom()];
-            let dadSnake = this.sample[chooseRandom()];
+        for (let i = 2; i < this.sample.length; ++i) {
+            let momSnake = this.selectSnake();
+            let dadSnake = this.selectSnake();
 
             let childSnake = new Snake(i);
-            childSnake.neuralNet = momSnake.neuralNet.crossOver(dadSnake.neuralNet);
+            childSnake.neuralNet = momSnake.neuralNet.crossover(dadSnake.neuralNet);
             childSnake.neuralNet.mutate(this.mutationRate);
 
             newSample.push(childSnake);
@@ -73,6 +37,35 @@ class Population {
 
         this.generation++;
         this.sample = newSample;
+    }
+
+    selectSnake() {
+        //this function works by randomly choosing a value between 0 and the sum of all the fitnesses
+        //then go through all the snakes and add their fitness to a running sum and if that sum is greater than the random value generated that snake is chosen
+        //since snakes with a higher fitness function add more to the running sum then they have a higher chance of being chosen
+
+
+        //calculate the sum of all the fitnesses
+        let fitnessSum = 0;
+        for (let i = 0; i < this.sample.length; i++) {
+            fitnessSum += this.sample[i].fitness;
+        }
+
+
+        //set random value
+        let rand = Math.random() * fitnessSum;
+
+        //initialise the running sum
+        let runningSum = 0;
+
+        for (let i = 0; i < this.sample.length; i++) {
+            runningSum += this.sample[i].fitness;
+            if (runningSum > rand) {
+                return this.sample[i];
+            }
+        }
+        //unreachable code to make the parser happy
+        return this.sample[0];
     }
 
     calcFitness() {

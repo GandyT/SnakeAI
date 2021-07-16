@@ -17,19 +17,71 @@ class Snake {
                 x: initX,
                 y: initY
             },
-            {
-                x: initX - 1,
-                y: initY,
-            },
-            {
-                x: initX - 2,
-                y: initY
-            },
-            {
-                x: initX - 3,
-                y: initY
-            }
         ];
+
+        let direction = Math.random();
+
+        if (direction < 0.25) {
+            this.chain.push(
+                {
+                    x: initX - 1,
+                    y: initY,
+                },
+                {
+                    x: initX - 2,
+                    y: initY
+                },
+                {
+                    x: initX - 3,
+                    y: initY
+                }
+            )
+        } else if (direction < 0.5) {
+            this.chain.push(
+                {
+                    x: initX + 1,
+                    y: initY,
+                },
+                {
+                    x: initX + 2,
+                    y: initY
+                },
+                {
+                    x: initX + 3,
+                    y: initY
+                }
+            )
+        } else if (direction < 0.75) {
+            this.chain.push(
+                {
+                    x: initX,
+                    y: initY - 1,
+                },
+                {
+                    x: initX,
+                    y: initY - 2
+                },
+                {
+                    x: initX,
+                    y: initY - 3
+                }
+            )
+        } else {
+            this.chain.push(
+                {
+                    x: initX,
+                    y: initY + 1
+                },
+                {
+                    x: initX,
+                    y: initY + 2
+                },
+                {
+                    x: initX,
+                    y: initY + 3
+                }
+            )
+        }
 
         this.color = randomHex();
         this.snakeNum = snakeNum;
@@ -39,9 +91,8 @@ class Snake {
         this.dead = false;
         this.addPos = {};
         this.vision = []; // single column matrix
-        this.neuralNet = new NeuralNet(24, 16, 4);
-        this.neuralNet.dense();
-        this.maxMoves = 250;
+        this.neuralNet = new NeuralNet(24, 12, 4);
+        this.maxMoves = 200;
         this.moves = this.maxMoves; // prevent infinite snakes
 
 
@@ -65,7 +116,6 @@ class Snake {
     }
 
     setVelocity(newVelocity) {
-        /* CHECK IF SNAKE'S HEAD WILL REVERSE INTO IT'S SECOND SEGMENT */
         this.velocity = newVelocity;
     }
 
@@ -148,7 +198,7 @@ class Snake {
                 appleFound = true;
             }
             if (!bodyFound && this.chain.find(seg => (seg.x == position.x && seg.y == position.y) && seg.x != this.chain[0].x && seg.y != this.chain[0].y)) {
-                temp[1] = 1;
+                temp[1] = 1 / distance;
                 bodyFound = true;
             }
 
@@ -176,7 +226,7 @@ class Snake {
         this.setVelocity([0, 1])
     }
     decide() {
-        var output = this.neuralNet.activate(this.vision);
+        var output = this.neuralNet.output(this.vision);
 
         var index = 0;
         var max = -1;
@@ -205,7 +255,7 @@ class Snake {
     }
 
     calcFitness() {
-        this.fitness = (this.maxMoves - this.moves) ** 2 * Math.pow(2, this.chain.length - 3);
+        this.fitness = (this.maxMoves - this.moves) ** 2 * Math.pow(2, this.chain.length);
     }
 
     revive() {
@@ -220,19 +270,71 @@ class Snake {
                 x: initX,
                 y: initY
             },
-            {
-                x: initX - 1,
-                y: initY,
-            },
-            {
-                x: initX - 2,
-                y: initY
-            },
-            {
-                x: initX - 3,
-                y: initY
-            }
         ];
+
+        let direction = Math.random();
+
+        if (direction < 0.25) {
+            this.chain.push(
+                {
+                    x: initX - 1,
+                    y: initY,
+                },
+                {
+                    x: initX - 2,
+                    y: initY
+                },
+                {
+                    x: initX - 3,
+                    y: initY
+                }
+            )
+        } else if (direction < 0.5) {
+            this.chain.push(
+                {
+                    x: initX + 1,
+                    y: initY,
+                },
+                {
+                    x: initX + 2,
+                    y: initY
+                },
+                {
+                    x: initX + 3,
+                    y: initY
+                }
+            )
+        } else if (direction < 0.75) {
+            this.chain.push(
+                {
+                    x: initX,
+                    y: initY - 1,
+                },
+                {
+                    x: initX,
+                    y: initY - 2
+                },
+                {
+                    x: initX,
+                    y: initY - 3
+                }
+            )
+        } else {
+            this.chain.push(
+                {
+                    x: initX,
+                    y: initY + 1
+                },
+                {
+                    x: initX,
+                    y: initY + 2
+                },
+                {
+                    x: initX,
+                    y: initY + 3
+                }
+            )
+        }
     }
 
     copy() {

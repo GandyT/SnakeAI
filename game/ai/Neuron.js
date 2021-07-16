@@ -37,7 +37,7 @@ class Neuron {
 
     activate(input) {
         /* STARTING NEURON */
-        if (input !== undefined) {
+        if (input) {
             this.output = input;
         } else {
             // Hidden / Output Neurons
